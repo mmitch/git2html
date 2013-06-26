@@ -125,13 +125,9 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
     my $max_id = @commits - 1;
     foreach my $commit (@commits) {
 	
-	my $curfile;
-	{
-	    open FILE, '<', "$outdir/$commit" or die "can't open `$outdir/$commit': $!";
-#	    local $/; # enable localized slurp mode
-	    $curfile = [ <FILE> ];
-	    close FILE or die "can't open `$outdir/$commit': $!";
-	}
+	open FILE, '<', "$outdir/$commit" or die "can't open `$outdir/$commit': $!";
+	my $curfile = [ <FILE> ];
+	close FILE or die "can't open `$outdir/$commit': $!";
 
 	if ($lastfile) {
 
@@ -146,24 +142,80 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 
 		my ($type, $left, $right) = @{ $hunk };
 
-		$left  = htmlize( $left );
-		$right = htmlize( $right );
+		if ($type eq 'c') { # both changed
 
-		if ($type eq '-') { # left is removed
-		    push @left,  "<font color=\"red\">$left</font>";
-		    push @right, $right;
+		    # WE MUST GO DEEEPER!
+		    # (and before the htmlize!)
 
-		} elsif ($type eq '+') { # right is added
-		    push @left,  $left;
-		    push @right, "<font color=\"green\">$right</font>";
+		    my $left__  = '';
+		    my $right__ = '';
 
-		} elsif ($type eq 'u') { # unchanged
-		    push @left,  $left;
-		    push @right, $right;
+		    my @hunks = sdiff( [ split(//, $left) ], [ split(//, $right) ] );
 
-		} elsif ($type eq 'c') { # both changed
-		    push @left,  "<b>$left</b>";
-		    push @right, "<b>$right</b>";
+		    my $lcolor = 'red';
+		    my $rcolor = 'green';
+
+		    # prettify, don't show too much line noise
+		    my $changes = 0;
+		    my $last = '';
+		    foreach my $hunk_ (@hunks) {
+			my $type = @{ $hunk_ }[0];
+			next if $last eq $type;
+			$changes++;
+			$last = $type;
+		    }
+		    if ($changes > 5) {
+			$lcolor = $rcolor = 'blue';
+		    }
+
+		    foreach my $hunk_ (@hunks) {
+
+			my ($type_, $left_, $right_) = @{ $hunk_ };
+			
+			$left  = htmlize( $left );
+			$right = htmlize( $right );
+			
+			if ($type_ eq '-') { # left is removed
+			    $left__ .=  "<b><font color=\"$lcolor\">$left_</font></b>";
+			    $right__ .= $right_;
+			    
+			} elsif ($type_ eq '+') { # right is added
+			    $left__  .= $left_;
+			    $right__ .= "<b><font color=\"$rcolor\">$right_</font></b>";
+			    
+			} elsif ($type_ eq 'u') { # unchanged
+			    $left__  .= $left_;
+			    $right__ .= $right_;
+			    
+			} elsif ($type_ eq 'c') { # both changed
+			    
+			    $left__  .= "<b><font color=\"blue\">$left_</font></b>";
+			    $right__ .= "<b><font color=\"blue\">$right_</font></b>";
+			}
+		    }
+
+		    push @left,  $left__;
+		    push @right, $right__;
+
+		} else {
+
+		    $left  = htmlize( $left );
+		    $right = htmlize( $right );
+		    
+		    if ($type eq '-') { # left is removed
+			push @left,  "<font color=\"red\">$left</font>";
+			push @right, $right;
+			
+		    } elsif ($type eq '+') { # right is added
+			push @left,  $left;
+			push @right, "<font color=\"green\">$right</font>";
+			
+		    } elsif ($type eq 'u') { # unchanged
+			push @left,  $left;
+			push @right, $right;
+
+		    }
+			
 		}
 	    }
 
