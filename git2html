@@ -6,11 +6,16 @@ use HTML::Entities;
 
 my $gitdir = '/home/mitch/git/uzepede/';
 my $file   = 'TODO';
+#my $gitdir = '/home/mitch/git/dwm-mitch/';
+#my $file   = 'dwm/dwm.c';
 my $output = './out';
 
 print "git repo   = `$gitdir'\n";
 print "file       = `$file'\n";
 print "output dir = `$output'\n";
+
+$|++;
+
 
 #####################################################################################
 
@@ -219,15 +224,15 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 		}
 	    }
 
-	    print HTML '<tr><td>';
+	    print HTML '<tr><td><code>';
 	    foreach my $line (@left) {
-		print HTML "<code>$line<code><br>"
+		print HTML "$line<br>"
 	    }
-	    print HTML '</td><td>';
+	    print HTML '</code></td><td><code>';
 	    foreach my $line (@right) {
-		print HTML "<code>$line<code><br>"
+		print HTML "$line<br>"
 	    }
-	    print HTML '</td></tr>';
+	    print HTML '</code></td></tr>';
 
 	    print HTML format_html_footer($id, $max_id);
 
@@ -237,7 +242,10 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 	    $id++;
 	}
 	$lastfile = $curfile;
+
+	print "x";
     }
+    print "\n";
 
     # clean up unique file revisions
 
