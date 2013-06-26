@@ -1,0 +1,199 @@
+#!/usr/bin/perl -w
+use strict;
+use File::Path qw(make_path remove_tree);
+use Algorithm::Diff qw(sdiff);
+use HTML::Entities;
+
+my $gitdir = '/home/mitch/git/uzepede/';
+my $file   = 'TODO';
+my $output = './out';
+
+print "git repo   = `$gitdir'\n";
+print "file       = `$file'\n";
+print "output dir = `$output'\n";
+
+#####################################################################################
+
+# build git commandline
+sub git_cmdline(@)
+{
+    return join(' ', ('git', "--work-tree=\"${gitdir}\"", "--git-dir=\"${gitdir}/.git\"", @_) );
+}
+
+# stupid simple git wrapper
+sub git(@)
+{
+    my @ret = ();
+    my $cmd = git_cmdline(@_);
+    open GIT, "$cmd |" or die "can't execute `$cmd': $!\n";
+    while (my $line = <GIT>) {
+	chomp $line;
+	push @ret, $line;
+    }
+    close GIT or die "can't close `$cmd': $!\n";
+    return @ret;
+}
+
+# format ASCII to HTML
+sub htmlize(@)
+{
+    my $ret = '';
+
+    foreach my $string (@_) {
+	$string = encode_entities($string, "\200-\377");
+	$string =~ s/\010/<br>/gm;
+	$ret .= $string;
+    }
+
+    return $ret;
+}
+
+# print HTML header
+sub format_html_header($$)
+{
+    my ($id, $max_id) = (@_);
+    my $ret = '<html><body><p>';
+    if ($id > 0) {
+	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a> ', ($id - 1);
+    } else {
+	$ret .= '&lt;&lt;&lt; ';
+    }
+    if ($id < $max_id - 1) {
+	$ret .= sprintf '<a href="%04d.html">&gt;&gt;&gt;</a> ', ($id + 1);
+    } else {
+	$ret .= '&gt;&gt;&gt; ';
+    }
+    $ret .= '</p><table>';
+    return $ret;
+}
+
+# print HTML header
+sub format_html_footer($$)
+{
+    my ($id, $max_id) = (@_);
+    my $ret = '</table><p>';
+    if ($id > 0) {
+	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a> ', ($id - 1);
+    } else {
+	$ret .= '&lt;&lt;&lt; ';
+    }
+    if ($id < $max_id - 1) {
+	$ret .= sprintf '<a href="%04d.html">&gt;&gt;&gt;</a> ', ($id + 1);
+    } else {
+	$ret .= '&gt;&gt;&gt; ';
+    }
+    $ret .= '</p></body></html>';
+    return $ret;
+}
+
+#####################################################################################
+
+# prepare output dir
+remove_tree($output);
+make_path($output);
+
+# get all branches
+foreach my $branch (map { substr ($_, 2) } git('branch')) {
+
+    print "\nprocessing branch <$branch>...\n";
+
+    my $outdir = "${output}/${branch}";
+    make_path($outdir);
+
+    # get all commits from log
+
+    my @commits;
+    foreach my $commitline (reverse git('log', '--format=oneline', '--', $file)) {
+	my ($id, undef) = split / /, $commitline, 2;
+	push @commits, $id;
+    }
+
+    # extract all unique file revisions
+
+    foreach my $commit (@commits) {
+
+	my $cmd = git_cmdline('cat-file', 'blob', "${commit}:${file}");
+	system( "$cmd > \"$outdir/$commit\"" );
+
+    }
+
+    # create individual diffs
+
+    my $lastcommit = undef;
+    my $id = 0;
+    my $lastfile;
+    my $max_id = @commits - 1;
+    foreach my $commit (@commits) {
+	
+	my $curfile;
+	{
+	    open FILE, '<', "$outdir/$commit" or die "can't open `$outdir/$commit': $!";
+#	    local $/; # enable localized slurp mode
+	    $curfile = [ <FILE> ];
+	    close FILE or die "can't open `$outdir/$commit': $!";
+	}
+
+	if ($lastfile) {
+
+	    my $htmlfile = sprintf '%s/%04d.html', $outdir, $id;
+	    open HTML, '>', $htmlfile or die "can't open `$htmlfile': $1";
+
+	    print HTML format_html_header($id, $max_id);
+
+	    my (@left, @right);
+
+	    foreach my $hunk (sdiff($lastfile, $curfile)) {
+
+		my ($type, $left, $right) = @{ $hunk };
+
+		$left  = htmlize( $left );
+		$right = htmlize( $right );
+
+		if ($type eq '-') { # left is removed
+		    push @left,  "<font color=\"red\">$left</font>";
+		    push @right, $right;
+
+		} elsif ($type eq '+') { # right is added
+		    push @left,  $left;
+		    push @right, "<font color=\"green\">$right</font>";
+
+		} elsif ($type eq 'u') { # unchanged
+		    push @left,  $left;
+		    push @right, $right;
+
+		} elsif ($type eq 'c') { # both changed
+		    push @left,  "<b>$left</b>";
+		    push @right, "<b>$right</b>";
+		}
+	    }
+
+	    print HTML '<tr><td>';
+	    foreach my $line (@left) {
+		print HTML "<code>$line<code><br>"
+	    }
+	    print HTML '</td><td>';
+	    foreach my $line (@right) {
+		print HTML "<code>$line<code><br>"
+	    }
+	    print HTML '</td></tr>';
+
+	    print HTML format_html_footer($id, $max_id);
+
+	    close DIFF; # or die "can't close `$diffcmd': $!";
+	    close HTML or die "can't close `$htmlfile': $1";
+
+	    $id++;
+	}
+	$lastfile = $curfile;
+    }
+
+    # clean up unique file revisions
+
+    foreach my $commit (@commits) {
+	unlink "$outdir/$commit";
+    }    
+
+    next;
+
+}
+
