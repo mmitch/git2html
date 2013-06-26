@@ -4,11 +4,14 @@ use File::Path qw(make_path remove_tree);
 use Algorithm::Diff qw(sdiff);
 use HTML::Entities;
 
-my $gitdir = '/home/mitch/git/uzepede/';
-my $file   = 'TODO';
+#my $gitdir = '/home/mitch/git/uzepede/';
+#my $file   = 'TODO';
 #my $gitdir = '/home/mitch/git/dwm-mitch/';
 #my $file   = 'dwm/dwm.c';
+my $gitdir = '/home/mitch/git/git2html/';
+my $file   = 'git2html';
 my $output = './out';
+my $tabwidth = 8;
 
 print "git repo   = `$gitdir'\n";
 print "file       = `$file'\n";
@@ -45,8 +48,9 @@ sub htmlize(@)
     my $ret = '';
 
     foreach my $string (@_) {
-	$string = encode_entities($string, "\200-\377");
+	$string = encode_entities($string);
 	$string =~ s/\010/<br>/gm;
+	$string =~ s/ /&nbsp;/gm;
 	$ret .= $string;
     }
 
@@ -118,7 +122,7 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
     foreach my $commit (@commits) {
 
 	my $cmd = git_cmdline('cat-file', 'blob', "${commit}:${file}");
-	system( "$cmd > \"$outdir/$commit\"" );
+	system( "$cmd | expand -t $tabwidth > \"$outdir/$commit\"" );
 
     }
 
@@ -177,8 +181,8 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 
 			my ($type_, $left_, $right_) = @{ $hunk_ };
 			
-			$left  = htmlize( $left );
-			$right = htmlize( $right );
+			$left_  = htmlize( $left_ );
+			$right_ = htmlize( $right_ );
 			
 			if ($type_ eq '-') { # left is removed
 			    $left__ .=  "<b><font color=\"$lcolor\">$left_</font></b>";
