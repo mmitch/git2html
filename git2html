@@ -131,7 +131,6 @@ sub format_html_header($$)
     my ($id, $max_id) = (@_);
     my $ret = "<!DOCTYPE html>\n";
     $ret .= '<html><head>';
-#    $ret .= '<link rel="stylesheet" href="http://nicolasgallagher.com/pure-css-speech-bubbles/demo/default.css">';
     $ret .= "<style>\n$css\n</style>";
     $ret .= '</head><body><p>';
     if ($id > 0) {
@@ -313,11 +312,11 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 		}
 	    }
 
-	    print HTML '<table><tr><td><code>';
+	    print HTML '<table><tr><td style="white-space: nowrap"><code>';
 	    foreach my $line (@left) {
 		print HTML "$line<br>\n"
 	    }
-	    print HTML '</code></td><td><code>';
+	    print HTML '</code></td><td style="white-space: nowrap"><code>';
 	    foreach my $line (@right) {
 		print HTML "$line<br>\n"
 	    }
