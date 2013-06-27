@@ -124,6 +124,22 @@ $css .= <<EOF;
   padding: 0 5px;
     white-space: no-wrap;
 }
+
+.red {
+  color:red;
+ background:#fcc;
+}
+
+.green {
+  color:green;
+ background:#cfc;
+}
+
+.blue {
+  color:blue;
+ background:#ccf;
+}
+
 EOF
     ;
 
@@ -294,6 +310,31 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 		    my $lcolor = 'red';
 		    my $rcolor = 'green';
 
+		    # concatenate as much as possible (don't color every single character)
+		    {
+			my @newhunks;
+			my $_type  = '';
+			my $_left  = '';
+			my $_right = '';
+			foreach my $hunk_ (@hunks) {
+			    my ($type_, $left_, $right_) = @{ $hunk_ };
+			    if ($_type ne $type_) {
+				if ($_type ne '') {
+				    push @newhunks, [ $_type, $_left, $_right ];
+				    $_left = $_right = '';
+				}
+				$_type = $type_;
+			    }
+			    $_left  .= $left_;
+			    $_right .= $right_;
+			}
+			if ($_type ne '') {
+			    push @newhunks, [ $_type, $_left, $_right ];
+			}
+			
+			@hunks = @newhunks;
+		    }
+
 		    # prettify, don't show too much line noise
 		    my $changes = 0;
 		    my $last = '';
@@ -315,12 +356,12 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 			$right_ = htmlize( $right_ );
 			
 			if ($type_ eq '-') { # left is removed
-			    $left__ .=  "<b><font color=\"$lcolor\">$left_</font></b>";
+			    $left__ .=  "<span class=\"${lcolor}\">$left_</span>";
 			    $right__ .= $right_;
 			    
 			} elsif ($type_ eq '+') { # right is added
 			    $left__  .= $left_;
-			    $right__ .= "<b><font color=\"$rcolor\">$right_</font></b>";
+			    $right__ .= "<span class=\"${rcolor}\">$right_</span>";
 			    
 			} elsif ($type_ eq 'u') { # unchanged
 			    $left__  .= $left_;
@@ -328,8 +369,8 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 			    
 			} elsif ($type_ eq 'c') { # both changed
 			    
-			    $left__  .= "<b><font color=\"blue\">$left_</font></b>";
-			    $right__ .= "<b><font color=\"blue\">$right_</font></b>";
+			    $left__  .= "<span class=\"blue\">$left_</span>";
+			    $right__ .= "<span class=\"blue\">$right_</span>";
 			}
 		    }
 
@@ -342,12 +383,12 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 		    $right = htmlize( $right );
 		    
 		    if ($type eq '-') { # left is removed
-			push @left,  "<font color=\"red\">$left</font>";
+			push @left,  "<span class=\"red\">$left</span>";
 			push @right, $right;
 			
 		    } elsif ($type eq '+') { # right is added
 			push @left,  $left;
-			push @right, "<font color=\"green\">$right</font>";
+			push @right, "<span class=\"green\">$right</span>";
 			
 		    } elsif ($type eq 'u') { # unchanged
 			push @left,  $left;
