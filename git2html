@@ -19,6 +19,77 @@ print "output dir = `$output'\n";
 
 $|++;
 
+#####################################################################################
+
+# CSS descriptions
+
+my $css = '';
+
+
+# the following snippet for .triangle-border is
+# taken from here:
+#
+# /* ------------------------------------------
+# PURE CSS SPEECH BUBBLES
+# by Nicolas Gallagher
+# - http://nicolasgallagher.com/pure-css-speech-bubbles/
+# 
+# http://nicolasgallagher.com
+# http://twitter.com/necolas
+#  
+# Created: 02 March 2010
+# Version: 1.2 (03 March 2011)
+# 
+# Dual licensed under MIT and GNU GPLv2 � Nicolas Gallagher 
+# ------------------------------------------ */
+$css .= <<EOF;
+.triangle-border {
+	position:relative;
+	padding:15px;
+	margin:1em 0 3em;
+	border:5px solid #5a8f00;
+	color:#333;
+	background:#fff;
+	/* css3 */
+	-webkit-border-radius:10px;
+	-moz-border-radius:10px;
+	border-radius:10px;
+}
+
+.triangle-border:before {
+	content:"";
+	position:absolute;
+	bottom:-20px; /* value = - border-top-width - border-bottom-width */
+	left:40px; /* controls horizontal position */
+    border-width:20px 20px 0;
+	border-style:solid;
+    border-color:#5a8f00 transparent;
+    /* reduce the damage in FF3.0 */
+    display:block; 
+    width:0;
+}
+
+/* creates the smaller  triangle */
+.triangle-border:after {
+	content:"";
+	position:absolute;
+	bottom:-13px; /* value = - border-top-width - border-bottom-width */
+	left:47px; /* value = (:before left) + (:before border-left) - (:after border-left) */
+	border-width:13px 13px 0;
+	border-style:solid;
+	border-color:#fff transparent;
+    /* reduce the damage in FF3.0 */
+    display:block; 
+    width:0;
+}
+
+EOF
+    ;
+
+$css .= <<EOF;
+p {color:sienna}
+EOF
+    ;
 
 #####################################################################################
 
@@ -45,14 +116,11 @@ sub git(@)
 # format ASCII to HTML
 sub htmlize(@)
 {
-    my $ret = '';
-
-    foreach my $string (@_) {
-	$string = encode_entities($string);
-	$string =~ s/\010/<br>/gm;
-	$string =~ s/ /&nbsp;/gm;
-	$ret .= $string;
-    }
+    my $ret = join "\n", @_;
+    $ret = encode_entities($ret);
+    $ret =~ s/\n/<br>/g;
+    $ret =~ s/^ /&nbsp;/gm;
+    $ret =~ s/  /&nbsp;&nbsp;/g;
 
     return $ret;
 }
@@ -61,7 +129,11 @@ sub htmlize(@)
 sub format_html_header($$)
 {
     my ($id, $max_id) = (@_);
-    my $ret = '<html><body><p>';
+    my $ret = "<!DOCTYPE html>\n";
+    $ret .= '<html><head>';
+#    $ret .= '<link rel="stylesheet" href="http://nicolasgallagher.com/pure-css-speech-bubbles/demo/default.css">';
+    $ret .= "<style>\n$css\n</style>";
+    $ret .= '</head><body><p>';
     if ($id > 0) {
 	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a> ', ($id - 1);
     } else {
@@ -72,7 +144,7 @@ sub format_html_header($$)
     } else {
 	$ret .= '&gt;&gt;&gt; ';
     }
-    $ret .= '</p><table>';
+    $ret .= '</p>';
     return $ret;
 }
 
@@ -80,7 +152,7 @@ sub format_html_header($$)
 sub format_html_footer($$)
 {
     my ($id, $max_id) = (@_);
-    my $ret = '</table><p>';
+    my $ret = '<p>';
     if ($id > 0) {
 	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a> ', ($id - 1);
     } else {
@@ -136,6 +208,7 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 	
 	open FILE, '<', "$outdir/$commit" or die "can't open `$outdir/$commit': $!";
 	my $curfile = [ <FILE> ];
+	chomp @{ $curfile };
 	close FILE or die "can't open `$outdir/$commit': $!";
 
 	if ($lastfile) {
@@ -144,6 +217,18 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 	    open HTML, '>', $htmlfile or die "can't open `$htmlfile': $1";
 
 	    print HTML format_html_header($id, $max_id);
+
+	    # print log
+	    
+	    my @commitlog = git('log', '-n', '1', '--format=format:"%an <%ae>, %ad%n%s%n%n%b"', $commit);
+	    my $author = shift @commitlog;
+
+	    print HTML '<div id="container">';
+	    print HTML '<p class="triangle-border">'.htmlize(@commitlog).'</p>';
+	    print HTML '<p><i>'.htmlize($author).'</i></p>';
+	    print HTML '</div>';
+
+	    # do the dirty diff work
 
 	    my (@left, @right);
 
@@ -228,19 +313,18 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 		}
 	    }
 
-	    print HTML '<tr><td><code>';
+	    print HTML '<table><tr><td><code>';
 	    foreach my $line (@left) {
-		print HTML "$line<br>"
+		print HTML "$line<br>\n"
 	    }
 	    print HTML '</code></td><td><code>';
 	    foreach my $line (@right) {
-		print HTML "$line<br>"
+		print HTML "$line<br>\n"
 	    }
-	    print HTML '</code></td></tr>';
+	    print HTML '</code></td></tr></table>';
 
 	    print HTML format_html_footer($id, $max_id);
 
-	    close DIFF; # or die "can't close `$diffcmd': $!";
 	    close HTML or die "can't close `$htmlfile': $1";
 
 	    $id++;
