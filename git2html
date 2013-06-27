@@ -8,8 +8,10 @@ use HTML::Entities;
 #my $file   = 'TODO';
 #my $gitdir = '/home/mitch/git/dwm-mitch/';
 #my $file   = 'dwm/dwm.c';
-my $gitdir = '/home/mitch/git/git2html/';
-my $file   = 'git2html';
+#my $gitdir = '/home/mitch/git/git2html/';
+#my $file   = 'git2html';
+my $gitdir = '/home/mitch/git/git2html-test/';
+my $file   = 'script.pl';
 my $output = './out';
 my $tabwidth = 8;
 
@@ -183,7 +185,7 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
     # get all commits from log
 
     my @commits;
-    foreach my $commitline (reverse git('log', '--format=oneline', '--', $file)) {
+    foreach my $commitline (reverse git('log', '--format=oneline', $branch, '--', $file)) {
 	my ($id, undef) = split / /, $commitline, 2;
 	push @commits, $id;
     }
