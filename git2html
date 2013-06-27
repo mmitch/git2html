@@ -392,6 +392,9 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 
     if ($max_id > 0) {
 	$branch{$branch} = $max_id;
+    } else {
+	# no changes, clean up branch
+	rmdir $outdir;
     }
 
 }
