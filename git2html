@@ -89,7 +89,41 @@ EOF
     ;
 
 $css .= <<EOF;
-p {color:sienna}
+.navbar {
+  background:#eca;
+  padding:5px;
+}
+
+.button {
+  background:#fff;
+  margin:3px;
+  padding:1px;
+  font-weight:bolder;
+}
+
+.signature {
+    margin-top:-30px;
+    margin-bottom:30px;
+    font-family:Georgia,Serif;
+    font-style:italic;
+}
+
+.diff {
+    border-style: solid none;
+    border-width: 20px;
+    border-color: #ccc;
+  margin: 20px 0;
+  padding: 20px 0;
+}
+
+.code {
+    border-style: none solid;
+    border-width: 2px;
+    border-color: #ccc;
+  margin: 0;
+  padding: 0 5px;
+    white-space: no-wrap;
+}
 EOF
     ;
 
@@ -127,44 +161,52 @@ sub htmlize(@)
     return $ret;
 }
 
-# print HTML header
-sub format_html_header($$)
+# print HTML navbar
+sub format_html_navbar($$)
 {
     my ($id, $max_id) = (@_);
-    my $ret = "<!DOCTYPE html>\n";
-    $ret .= '<html><head>';
-    $ret .= "<style>\n$css\n</style>";
-    $ret .= '</head><body><p>';
+    my $ret = '<div class="navbar">';
+
+    $ret .= '<span class="button">';
     if ($id > 0) {
 	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a> ', ($id - 1);
     } else {
 	$ret .= '&lt;&lt;&lt; ';
     }
+    $ret .= '</span>';
+
+    $ret .= '<span class="button">';
+    $ret .= '<a href="../index.html">^^^</a> ';
+    $ret .= '</span>';
+
+    $ret .= '<span class="button">';
     if ($id < $max_id - 1) {
 	$ret .= sprintf '<a href="%04d.html">&gt;&gt;&gt;</a> ', ($id + 1);
     } else {
 	$ret .= '&gt;&gt;&gt; ';
     }
-    $ret .= '</p>';
+    $ret .= '</span>';
+
+    $ret .= sprintf '(%04d/%04d)', $id+1, $max_id;
+
+    $ret .= '</div>';
     return $ret;
 }
 
 # print HTML header
-sub format_html_footer($$)
+sub format_html_header()
 {
-    my ($id, $max_id) = (@_);
-    my $ret = '<p>';
-    if ($id > 0) {
-	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a> ', ($id - 1);
-    } else {
-	$ret .= '&lt;&lt;&lt; ';
-    }
-    if ($id < $max_id - 1) {
-	$ret .= sprintf '<a href="%04d.html">&gt;&gt;&gt;</a> ', ($id + 1);
-    } else {
-	$ret .= '&gt;&gt;&gt; ';
-    }
-    $ret .= '</p></body></html>';
+    my $ret = "<!DOCTYPE html>\n";
+    $ret .= '<html><head>';
+    $ret .= "<style>\n$css\n</style>";
+    $ret .= '</head><body>';
+    return $ret;
+}
+
+# print HTML header
+sub format_html_footer()
+{
+    my $ret .= '</body></html>';
     return $ret;
 }
 
@@ -174,7 +216,9 @@ sub format_html_footer($$)
 remove_tree($output);
 make_path($output);
 
-# get all branches
+
+# process all branches
+my %branch;
 foreach my $branch (map { substr ($_, 2) } git('branch')) {
 
     print "\nprocessing branch <$branch>...\n";
@@ -217,17 +261,17 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 	    my $htmlfile = sprintf '%s/%04d.html', $outdir, $id;
 	    open HTML, '>', $htmlfile or die "can't open `$htmlfile': $1";
 
-	    print HTML format_html_header($id, $max_id);
+	    print HTML format_html_header();
+
+	    print HTML format_html_navbar($id, $max_id);
 
 	    # print log
 	    
 	    my @commitlog = git('log', '-n', '1', '--format=format:"%an <%ae>, %ad%n%s%n%n%b"', $commit);
 	    my $author = shift @commitlog;
 
-	    print HTML '<div id="container">';
-	    print HTML '<p class="triangle-border">'.htmlize(@commitlog).'</p>';
-	    print HTML '<p><i>'.htmlize($author).'</i></p>';
-	    print HTML '</div>';
+	    print HTML '<div class="triangle-border">'.htmlize(@commitlog).'</div>';
+	    print HTML '<div class="signature">'.htmlize($author).'</div>';
 
 	    # do the dirty diff work
 
@@ -314,17 +358,19 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 		}
 	    }
 
-	    print HTML '<table><tr><td style="white-space: nowrap"><code>';
+	    print HTML '<table class="diff"><tr><td class="code"><code>';
 	    foreach my $line (@left) {
 		print HTML "$line<br>\n"
 	    }
-	    print HTML '</code></td><td style="white-space: nowrap"><code>';
+	    print HTML '</code></td><td class="code"><code>';
 	    foreach my $line (@right) {
 		print HTML "$line<br>\n"
 	    }
 	    print HTML '</code></td></tr></table>';
 
-	    print HTML format_html_footer($id, $max_id);
+	    print HTML format_html_navbar($id, $max_id);
+
+	    print HTML format_html_footer();
 
 	    close HTML or die "can't close `$htmlfile': $1";
 
@@ -340,9 +386,35 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 
     foreach my $commit (@commits) {
 	unlink "$outdir/$commit";
-    }    
+    }
 
-    next;
+    # remember what has been done
+
+    if ($max_id > 0) {
+	$branch{$branch} = $max_id;
+    }
 
 }
 
+
+# write index.html
+
+my $htmlfile = "${output}/index.html";
+open HTML, '>', $htmlfile or die "can't open `$htmlfile': $1";
+
+print HTML format_html_header();
+
+print HTML "<h1>$file</h1>\n";
+print HTML '<ul>';
+foreach my $branch (sort keys %branch) {
+    printf HTML ("<li><a href=\"%s/0000.html\">%s</a> (%04d)</li>\n",
+		 $branch,
+		 $branch,
+		 $branch{$branch}
+	);
+}
+print HTML '</ul>';
+
+print HTML format_html_footer();
+
+close HTML or die "can't close `$htmlfile': $1";
