@@ -233,22 +233,82 @@ remove_tree($output);
 make_path($output);
 
 
-# process all branches
-my %branch;
-foreach my $branch (map { substr ($_, 2) } git('branch')) {
+# read all branches
+printf "\nreading branches...\n";
+my %branch = 
+    map { $_ => {} }
+        sort
+            map { substr ($_, 2) }
+                git('branch');
+printf "%s\n", 'x' x scalar keys %branch;
 
+
+# read all commits
+printf "\nreading commits...\n";
+foreach my $branch (keys %branch) {
+
+    # get all commits from log
+    my @commits =
+	map { (split(/ /, $_, 2))[0] }
+            git('log', '--format=oneline', $branch, '--', $file);
+
+    $branch{$branch} = {
+	BRANCH  => $branch,
+	HEAD    => $commits[0],
+	COMMITS => \@commits
+    };
+
+    print "x";
+}
+print "\n";
+
+    
+# try to remove duplicate commits
+printf "\npruning commits...\n";
+foreach my $branch (keys %branch) {
+
+    # get the heads of all other branches
+    my @heads = 
+	map { $branch{$_}->{HEAD} }
+            grep { $_ ne $branch }
+                keys %branch;
+
+    # prune commits when reaching the HEAD of another branch
+    # also reverse the commits
+    my @commits;
+    foreach my $commit ( @{$branch{$branch}->{COMMITS}} ) {
+	unshift @commits, $commit;
+	last if (grep { $_ eq $commit } @heads) > 0;
+    }
+	
+    # store pruned commit list
+    $branch{$branch}->{COMMITS} = \@commits;
+
+    print "x";
+}
+print "\n";
+
+    
+# remove branches without changes
+printf "\npruning branches...\n";
+{
+    my %branch_ =
+	map { $_ => $branch{$_} }
+            grep { @{$branch{$_}->{COMMITS}} > 1 }
+                keys %branch;
+    %branch = %branch_;
+}
+printf "%s\n", 'x' x scalar keys %branch;
+
+    
+# process all branches
+foreach my $branch (keys %branch) {
     print "\nprocessing branch <$branch>...\n";
+
+    my @commits = @{$branch{$branch}->{COMMITS}};
 
     my $outdir = "${output}/${branch}";
     make_path($outdir);
-
-    # get all commits from log
-
-    my @commits;
-    foreach my $commitline (reverse git('log', '--format=oneline', $branch, '--', $file)) {
-	my ($id, undef) = split / /, $commitline, 2;
-	push @commits, $id;
-    }
 
     # extract all unique file revisions
 
@@ -429,15 +489,6 @@ foreach my $branch (map { substr ($_, 2) } git('branch')) {
 	unlink "$outdir/$commit";
     }
 
-    # remember what has been done
-
-    if ($max_id > 0) {
-	$branch{$branch} = $max_id;
-    } else {
-	# no changes, clean up branch
-	rmdir $outdir;
-    }
-
 }
 
 
@@ -450,11 +501,11 @@ print HTML format_html_header();
 
 print HTML "<h1>$file</h1>\n";
 print HTML '<ul>';
-foreach my $branch (sort keys %branch) {
+foreach my $branch (keys %branch) {
     printf HTML ("<li><a href=\"%s/0000.html\">%s</a> (%04d)</li>\n",
 		 $branch,
 		 $branch,
-		 $branch{$branch}
+		 @{$branch{$branch}->{COMMITS}} - 1
 	);
 }
 print HTML '</ul>';
