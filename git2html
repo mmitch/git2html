@@ -390,9 +390,8 @@ make_path($output);
 printf "\nreading branches...\n";
 my %branch = 
     map { $_ => {} }
-        sort
-            map { substr ($_, 2) }
-                git('branch');
+        map { substr ($_, 2) }
+            git('branch');
 printf "%s\n", 'x' x scalar keys %branch;
 
 
@@ -581,7 +580,7 @@ print HTML format_html_header();
 
 print HTML "<h1>$file</h1>\n";
 print HTML '<ul>';
-foreach my $branch (keys %branch) {
+foreach my $branch (sort keys %branch) {
     printf HTML ("<li><a href=\"%s/0000.html\">%s</a> (%04d)</li>\n",
 		 $branch,
 		 $branch,
