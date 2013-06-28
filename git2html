@@ -141,6 +141,10 @@ $css .= <<EOF;
  background:#ccf;
 }
 
+.lightblue {
+ background:#eef;
+}
+
 EOF
     ;
 
@@ -225,6 +229,154 @@ sub format_html_footer()
 {
     my $ret .= '</body></html>';
     return $ret;
+}
+
+# add a <span class=""> tag around a string
+sub add_span($$)
+{
+    my ($text, $class) = @_;
+    return sprintf '<span class="%s">%s</span>', $class, $text;
+}
+
+# fuse multiple hunks of the same type
+sub merge_hunks(@)
+{
+    my @hunks = @_;
+    my @newhunks;
+
+    my $type  = '';
+    my $left  = '';
+    my $right = '';
+
+    foreach my $hunk_ (@hunks) {
+	my ($type_, $left_, $right_) = @{ $hunk_ };
+	if ($type ne $type_) {
+	    if ($type ne '') {
+		push @newhunks, [ $type, $left, $right ];
+		$left = $right = '';
+	    }
+	    $type = $type_;
+	}
+	$left  .= $left_;
+	$right .= $right_;
+    }
+    if ($type ne '') {
+	push @newhunks, [ $type, $left, $right ];
+    }
+    
+    return @newhunks;
+}
+
+# diff a single line
+sub diff_single_line($$)
+{
+    # diff within diff :)
+    # we must go deeper
+
+    my ($left, $right) = @_;
+    my $left_  = '';
+    my $right_ = '';
+
+    # split into single characters and run diff
+    my @hunks = sdiff( [ split(//, $left) ], [ split(//, $right) ] );
+
+    # merge hunks if possible
+    @hunks = merge_hunks( @hunks );
+
+    # no check what has happened:
+    # - max. 2 insertions and/or deletions -> mark green/red
+    # - multiple insertions or changes on both sides -> mark everything blue from first to last change
+    my %changes = (
+	'c' => 0,
+	'+' => 0,
+	'-' => 0,
+    );
+    foreach my $hunk (@hunks) {
+	$changes{ @{$hunk}[0] }++;
+    }
+
+    if ( $changes{'c'} == 0 and $changes{'+'} < 3 and $changes{'-'} < 3 ) {
+	# green/red
+	foreach my $hunk (@hunks) {
+
+	    my ($type, $left, $right) = @{ $hunk };
+			
+	    $left  = htmlize( $left );
+	    $right = htmlize( $right );
+			
+	    # this is not perfect: multiple lightblue spans may stay unfused
+
+	    if ($type eq '-') { # left is removed
+		$left_  .= add_span($left,  'red');
+		$right_ .= add_span($right, 'lightblue');
+		
+	    } elsif ($type eq '+') { # right is added
+		$left_  .= add_span($left , 'lightblue');
+		$right_ .= add_span($right, 'green');
+		
+	    } elsif ($type eq 'u') { # unchanged
+		$left_  .= add_span($left , 'lightblue');
+		$right_ .= add_span($right, 'lightblue');
+			    
+	    } elsif ($type eq 'c') { # both changed
+			    
+		die "we can't be here!";
+
+	    } else {
+
+		die "we can't be here, neither!";
+
+	    }
+
+	}
+
+    } else {
+
+	# transform type markers to string
+	my $tokens =
+	    join '',
+	        map { @{$_}[0] }
+	            @hunks;
+	
+	# extract hunk contents
+	my @left  = map { @{$_}[1] } @hunks;
+	my @right = map { @{$_}[2] } @hunks;
+
+	# scan for unchanged/changed/unchanged parts
+	die unless $tokens =~ /^(u*)(.*?)(u*)$/;
+
+	# convert tokens to hunk contents
+	my ($l1, $l2, $l3) = ('', '', '');
+	$l1 .= shift @left  foreach ( 1 .. length $1 );
+	$l2 .= shift @left  foreach ( 1 .. length $2 );
+	$l3 .= shift @left  foreach ( 1 .. length $3 );
+
+	my ($r1, $r2, $r3) = ('', '', '');
+	$r1 .= shift @right foreach ( 1 .. length $1 );
+	$r2 .= shift @right foreach ( 1 .. length $2 );
+	$r3 .= shift @right foreach ( 1 .. length $3 );
+
+	# do html conversion
+	($l1, $l2, $l3) = map { htmlize $_ } ($l1, $l2, $l3);
+	($r1, $r2, $r3) = map { htmlize $_ } ($r1, $r2, $r3);
+
+	# format parts
+	$l1 = add_span($l1, 'lightblue') unless $l1 eq '';
+	$l2 = add_span($l2, 'blue')      unless $l2 eq '';
+	$l3 = add_span($l3, 'lightblue') unless $l3 eq '';
+
+	$r1 = add_span($r1, 'lightblue') unless $r1 eq '';
+	$r2 = add_span($r2, 'blue')      unless $r2 eq '';
+	$r3 = add_span($r3, 'lightblue') unless $r3 eq '';
+	
+	# concatenate result
+	$left_  = $l1.$l2.$l3;
+	$right_ = $r1.$r2.$r3;
+	
+    }
+
+    return ($left_, $right_);
+
 }
 
 #####################################################################################
@@ -360,83 +512,10 @@ foreach my $branch (keys %branch) {
 
 		if ($type eq 'c') { # both changed
 
-		    # WE MUST GO DEEEPER!
-		    # (and before the htmlize!)
+		    ($left, $right) = diff_single_line($left, $right);
 
-		    my $left__  = '';
-		    my $right__ = '';
-
-		    my @hunks = sdiff( [ split(//, $left) ], [ split(//, $right) ] );
-
-		    my $lcolor = 'red';
-		    my $rcolor = 'green';
-
-		    # concatenate as much as possible (don't color every single character)
-		    {
-			my @newhunks;
-			my $_type  = '';
-			my $_left  = '';
-			my $_right = '';
-			foreach my $hunk_ (@hunks) {
-			    my ($type_, $left_, $right_) = @{ $hunk_ };
-			    if ($_type ne $type_) {
-				if ($_type ne '') {
-				    push @newhunks, [ $_type, $_left, $_right ];
-				    $_left = $_right = '';
-				}
-				$_type = $type_;
-			    }
-			    $_left  .= $left_;
-			    $_right .= $right_;
-			}
-			if ($_type ne '') {
-			    push @newhunks, [ $_type, $_left, $_right ];
-			}
-			
-			@hunks = @newhunks;
-		    }
-
-		    # prettify, don't show too much line noise
-		    my $changes = 0;
-		    my $last = '';
-		    foreach my $hunk_ (@hunks) {
-			my $type = @{ $hunk_ }[0];
-			next if $last eq $type;
-			$changes++;
-			$last = $type;
-		    }
-		    if ($changes > 5) {
-			$lcolor = $rcolor = 'blue';
-		    }
-
-		    foreach my $hunk_ (@hunks) {
-
-			my ($type_, $left_, $right_) = @{ $hunk_ };
-			
-			$left_  = htmlize( $left_ );
-			$right_ = htmlize( $right_ );
-			
-			if ($type_ eq '-') { # left is removed
-			    $left__ .=  "<span class=\"${lcolor}\">$left_</span>";
-			    $right__ .= $right_;
-			    
-			} elsif ($type_ eq '+') { # right is added
-			    $left__  .= $left_;
-			    $right__ .= "<span class=\"${rcolor}\">$right_</span>";
-			    
-			} elsif ($type_ eq 'u') { # unchanged
-			    $left__  .= $left_;
-			    $right__ .= $right_;
-			    
-			} elsif ($type_ eq 'c') { # both changed
-			    
-			    $left__  .= "<span class=\"blue\">$left_</span>";
-			    $right__ .= "<span class=\"blue\">$right_</span>";
-			}
-		    }
-
-		    push @left,  $left__;
-		    push @right, $right__;
+		    push @left,  $left;
+		    push @right, $right;
 
 		} else {
 
@@ -444,12 +523,12 @@ foreach my $branch (keys %branch) {
 		    $right = htmlize( $right );
 		    
 		    if ($type eq '-') { # left is removed
-			push @left,  "<span class=\"red\">$left</span>";
+			push @left,  add_span($left, 'red');
 			push @right, $right;
 			
 		    } elsif ($type eq '+') { # right is added
 			push @left,  $left;
-			push @right, "<span class=\"green\">$right</span>";
+			push @right, add_span($right, 'green');
 			
 		    } elsif ($type eq 'u') { # unchanged
 			push @left,  $left;
