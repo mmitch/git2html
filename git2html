@@ -28,6 +28,7 @@ $|++;
 my $css = '';
 
 
+$css .= <<EOF;
 # the following snippet for .triangle-border is
 # taken from here:
 #
@@ -42,9 +43,8 @@ my $css = '';
 # Created: 02 March 2010
 # Version: 1.2 (03 March 2011)
 # 
-# Dual licensed under MIT and GNU GPLv2 � Nicolas Gallagher 
+# Dual licensed under MIT and GNU GPLv2 © Nicolas Gallagher 
 # ------------------------------------------ */
-$css .= <<EOF;
 .triangle-border {
 	position:relative;
 	padding:15px;
