@@ -170,7 +170,7 @@ sub git(@)
 sub htmlize(@)
 {
     my $ret = join "\n", @_;
-    $ret = encode_entities($ret);
+    $ret = encode_entities($ret, "<>&\"'");
     $ret =~ s/\n/<br>/g;
     $ret =~ s/^ /&nbsp;/gm;
     $ret =~ s/  /&nbsp;&nbsp;/g;
