@@ -10,6 +10,7 @@ my ($gitdir, $file);
 my $output   = './out';
 my $charset  = 'utf-8';
 my $tabwidth = 8;
+my %branch_ignore;
 
 # enable autoflush
 $|++;
@@ -156,7 +157,10 @@ sub print_help($)
 
     print <<"EOF";
 
-git2html [-h|--help] [-o <outdir>] [-c <charset>] [-t <tabwidth>] <sourcefile>
+git2html [-h|--help]
+         [-o <outdir>] [-c <charset>] [-t <tabwidth>]
+         [ [-i <branch>] ... ]
+         <sourcefile>
 
  <sourcefile>    the file to convert, must be inside a non-bare git repository
 
@@ -166,6 +170,8 @@ git2html [-h|--help] [-o <outdir>] [-c <charset>] [-t <tabwidth>] <sourcefile>
  -c <charset>    HTML charset meta header, default is `$charset'
 
  -t <tabwidth>   expand tabs to this many spaces, default is `$tabwidth'
+
+ -i <branch>     ignore <branch> in output files
 
  -h, --help      show this help
 
@@ -201,6 +207,9 @@ sub parse_commandline(@)
 		$tabwidth = $param;
 		$param =~ tr/0-9//d;
 		die "tabwidth is no integer" unless $param eq '';
+
+	    } elsif ($arg eq '-i') {
+		$branch_ignore{$param}++
 
 	    } else {
 		die "unknown switch `$arg'\n";
@@ -539,13 +548,14 @@ foreach my $branch (keys %branch) {
 print "\n";
 
     
-# remove branches without changes
+# remove branches without changes and ignored branches
 printf "\npruning branches...\n";
 {
     my %branch_ =
 	map { $_ => $branch{$_} }
             grep { @{$branch{$_}->{COMMITS}} > 1 }
-                keys %branch;
+                grep { ! exists $branch_ignore{$_} }
+                    keys %branch;
     %branch = %branch_;
 }
 printf "%s\n", 'x' x scalar keys %branch;

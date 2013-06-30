@@ -10,7 +10,10 @@ Current status is "works for me", git2html is propably not the right tool to tra
 
 ## Invocation
 
-    git2html [-h|--help] [-o <output directory>] [-c <charset>] [-t <tabwidth>] <sourcefile>
+    git2html [-h|--help]
+             [-o <output directory>] [-c <charset>] [-t <tabwidth>]
+             [ [-i <branch>] ... ]
+             <sourcefile>
 
 `<sourcefile>` must be part of a non-bare local git repository.
 This file's changelog will be converted to HTML over all available branches.
@@ -22,6 +25,9 @@ by default) relative to your current working directory.
 The `charset` will be used in the HTML charset meta header.  Default is `utf-8`.
 
 The `tabwidth` will be used to expand tabs in the source file.  Default is `8`.
+
+`-i <branch>` ignores the given branch in the output.  This parameter
+can be used multiple times to suppress multiple branches.
 
 ## Example
 
