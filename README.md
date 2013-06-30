@@ -17,7 +17,7 @@ This file's changelog will be converted to HTML over all available branches.
 
 The generated files will be created in the `output directory` (`./out`
 by default) relative to your current working directory.
-**BEWARE THAT THIS DIRECTORY AND ALL IT'S CONTENTS WILL BE SILENTLY OVERWRITTEN!**
+**BEWARE:** This directory and all it's contents will be silently overwritten!
 
 The `charset` will be used in the HTML charset meta header.  Default is `utf-8`.
 
