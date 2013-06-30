@@ -150,8 +150,10 @@ EOF
 #####################################################################################
 
 # print help
-sub print_help
+sub print_help($)
 {
+    my $rc = shift;
+
     print <<"EOF";
 
 git2html [-h|--help] [-o <outdir>] [-c <charset>] [-t <tabwidth>] <sourcefile>
@@ -170,7 +172,7 @@ git2html [-h|--help] [-o <outdir>] [-c <charset>] [-t <tabwidth>] <sourcefile>
 EOF
 ;
     
-    exit 0;
+    exit $rc;
 }
 
 # parse commandline parameters
@@ -182,11 +184,11 @@ sub parse_commandline(@)
 	my $arg = shift @args;
 
 	if ($arg eq '-h' or $arg eq '--help') {
-	    print_help;
+	    print_help(0);
 
 	} else {
 	    my $param = shift @args;
-	    die "no parameter given for `$arg'\n" unless definied $param;
+	    die "no parameter given for `$arg'\n" unless defined $param;
 	    die "parameter is empty for `$arg'\n" if $param eq '';
 
 	    if ($arg eq '-o') {
@@ -208,8 +210,10 @@ sub parse_commandline(@)
 	}
     }
 
-    if (@args == 0 or $args[0] eq '-h' or $args[0] eq '--help') {
-	print_help;
+    if (@args == 0) {
+	print_help(1);
+    } elsif ($args[0] eq '-h' or $args[0] eq '--help') {
+	print_help(0);
     }
     
     my $param = shift @args;
