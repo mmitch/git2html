@@ -5,11 +5,13 @@ use Algorithm::Diff qw(sdiff);
 use HTML::Entities;
 use Cwd qw(abs_path);
 
+# globals and defaults
 my ($gitdir, $file);
-my $output = './out';
-my $charset = 'utf-8';
+my $output   = './out';
+my $charset  = 'utf-8';
 my $tabwidth = 8;
 
+# enable autoflush
 $|++;
 
 #####################################################################################
@@ -140,6 +142,89 @@ EOF
     ;
 
 #####################################################################################
+
+# print help
+sub print_help
+{
+    print <<"EOF";
+
+git2html [-h|--help] [-o <outdir>] [-c <charset>] [-t <tabwidth>] <sourcefile>
+
+ <sourcefile>   the file to convert, must be inside a non-bare git repository
+
+ -o <outdir>     output directory, default is `$output'
+                 DIRECTORY WILL BE SILENTLY OVERWRITTEN, BE CAREFUL!
+
+ -c <charset>    HTML charset meta header, default is `$charset'
+
+ -t <tabwidth>   expand tabs to this many spaces, default is `$tabwidth'
+
+ -h, --help      show this help
+
+EOF
+;
+    
+    exit 0;
+}
+
+# parse commandline parameters
+sub parse_commandline(@)
+{
+    my @args = @_;
+
+    while (@args and $args[0] =~ /^-/) {
+	my $arg = shift @args;
+
+	if ($arg eq '-h' or $arg eq '--help') {
+	    print_help;
+
+	} else {
+	    my $param = shift @args;
+	    die "no parameter given for `$arg'\n" unless definied $param;
+	    die "parameter is empty for `$arg'\n" if $param eq '';
+
+	    if ($arg eq '-o') {
+		$output = $param;
+
+	    } elsif ($arg eq '-c') {
+		$charset = $param;
+
+	    } elsif ($arg eq 't') {
+		$tabwidth = $param;
+		$param =~ tr/0-9//d;
+		die "tabwidth is no integer" unless $param eq '';
+
+	    } else {
+		die "unknown switch `$arg'\n";
+
+	    }
+
+	}
+    }
+
+    if (@args == 0 or $args[0] eq '-h' or $args[0] eq '--help') {
+	print_help;
+    }
+    
+    my $param = shift @args;
+    die "`$param' is a directory\n" if -d $param;
+    die "`$param' is no file\n" unless -f $param;
+    
+    # parse paths and parametes
+    my $realfile = abs_path($param);
+    my $realpath = $realfile;
+    $realpath =~ s,/[^/]+$,,;
+    $gitdir = `cd "$realpath"; git rev-parse --show-toplevel`;
+    chomp $gitdir;
+
+    my $len = length $gitdir;
+    die "messy paths, ouch! `$gitdir' vs. `$realfile'"
+	unless substr($realfile, 0, $len) eq $gitdir;
+	
+    $file = substr $realfile, $len;
+    $file =~ s,^/,,;
+	
+}
 
 # build git commandline
 sub git_cmdline(@)
@@ -373,35 +458,16 @@ sub diff_single_line($$)
 
 #####################################################################################
 
-# parse commandline
-{
-    die "no filename given\n" unless (@ARGV == 1);
-    
-    my $param = shift @ARGV;
-    die "`$param' is a directory\n" if -d $param;
-    die "`$param' is no file\n" unless -f $param;
-    
-    # parse paths and parametes
-    my $realfile = abs_path($param);
-    my $realpath = $realfile;
-    $realpath =~ s,/[^/]+$,,;
-    $gitdir = `cd "$realpath"; git rev-parse --show-toplevel`;
-    chomp $gitdir;
-
-    my $len = length $gitdir;
-    die "messy paths, ouch! `$gitdir' vs. `$realfile'"
-	unless substr($realfile, 0, $len) eq $gitdir;
-	
-    $file = substr $realfile, $len;
-    $file =~ s,^/,,;
-	
-}
+# setup configuration
+parse_commandline(@ARGV);
 print "git repo   = `$gitdir'\n";
 print "file       = `$file'\n";
 print "output dir = `$output'\n";
+print "charset    = `$charset'\n";
 
 
 # prepare output dir
+die "output directory `$output' already exists as a file - won't overwrite\n" if -f $output;
 remove_tree($output);
 make_path($output);
 

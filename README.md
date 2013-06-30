@@ -10,13 +10,18 @@ Current status is "works for me", git2html is propably not the right tool to tra
 
 ## Invocation
 
-    git2html <filename>
-    
-`<filename>` must be part of a non-bare local git repository.
+    git2html [-h|--help] [-o <output directory>] [-c <charset>] [-t <tabwidth>] <sourcefile>
+
+`<sourcefile>` must be part of a non-bare local git repository.
 This file's changelog will be converted to HTML over all available branches.
 
-The generated files will be created in the directory `./out` relative to your current working directory.
+The generated files will be created in the `output directory` (`./out`
+by default) relative to your current working directory.
 **BEWARE THAT THIS DIRECTORY AND ALL IT'S CONTENTS WILL BE SILENTLY OVERWRITTEN!**
+
+The `charset` will be used in the HTML charset meta header.  Default is `utf-8`.
+
+The `tabwidth` will be used to expand tabs in the source file.  Default is `8`.
 
 ## Example
 
