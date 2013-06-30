@@ -138,6 +138,12 @@ $css .= <<EOF;
  background:#eef;
 }
 
+.footer {
+    font-style: italic;
+    font-size: 0.8em;
+    text-align: right;
+}
+
 EOF
     ;
 
@@ -304,7 +310,9 @@ sub format_html_header()
 # print HTML header
 sub format_html_footer()
 {
-    my $ret .= '</body></html>';
+    my $ret .= '<div class="footer">created by <a href="https://github.com/mmitch/git2html/">git2html</a> on ';
+    $ret .= localtime;
+    $ret .= '</div></body></html>';
     return $ret;
 }
 
