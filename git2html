@@ -13,6 +13,7 @@ use HTML::Entities;
 my $gitdir = '/home/mitch/git/git2html-test/';
 my $file   = 'script.pl';
 my $output = './out';
+my $charset = 'utf-8';
 my $tabwidth = 8;
 
 print "git repo   = `$gitdir'\n";
@@ -219,6 +220,7 @@ sub format_html_header()
 {
     my $ret = "<!DOCTYPE html>\n";
     $ret .= '<html><head>';
+    $ret .= "<meta charset='$charset'>";
     $ret .= "<style>\n$css\n</style>";
     $ret .= '</head><body>';
     return $ret;
