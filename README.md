@@ -23,3 +23,17 @@ The generated files will be created in the directory `./out` relative to your cu
 This [live demo](http://www.cgarbs.de/stuff/git2html-test/) is generated nightly from the
 [git2html-test](https://github.com/mmitch/git2html-test/) demo repository
 using the most current version of `git2html`.
+
+## Prerequisites
+
+The following Perl modules are needed:
+
+* `Algorithm::Diff`
+* `Cwd` (should be part of Perl base install)
+* `File::Path` (should be part of Perl base install)
+* `HTML::Entities`
+
+The following executables are needed:
+
+* `git` (obviously)
+* `expand` from coreutils
