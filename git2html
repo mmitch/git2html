@@ -156,7 +156,7 @@ sub print_help
 
 git2html [-h|--help] [-o <outdir>] [-c <charset>] [-t <tabwidth>] <sourcefile>
 
- <sourcefile>   the file to convert, must be inside a non-bare git repository
+ <sourcefile>    the file to convert, must be inside a non-bare git repository
 
  -o <outdir>     output directory, default is `$output'
                  DIRECTORY WILL BE SILENTLY OVERWRITTEN, BE CAREFUL!
