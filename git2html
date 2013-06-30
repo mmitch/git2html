@@ -3,22 +3,12 @@ use strict;
 use File::Path qw(make_path remove_tree);
 use Algorithm::Diff qw(sdiff);
 use HTML::Entities;
+use Cwd qw(abs_path);
 
-#my $gitdir = '/home/mitch/git/uzepede/';
-#my $file   = 'TODO';
-#my $gitdir = '/home/mitch/git/dwm-mitch/';
-#my $file   = 'dwm/dwm.c';
-#my $gitdir = '/home/mitch/git/git2html/';
-#my $file   = 'git2html';
-my $gitdir = '/home/mitch/git/git2html-test/';
-my $file   = 'script.pl';
+my ($gitdir, $file);
 my $output = './out';
 my $charset = 'utf-8';
 my $tabwidth = 8;
-
-print "git repo   = `$gitdir'\n";
-print "file       = `$file'\n";
-print "output dir = `$output'\n";
 
 $|++;
 
@@ -382,6 +372,34 @@ sub diff_single_line($$)
 }
 
 #####################################################################################
+
+# parse commandline
+{
+    die "no filename given\n" unless (@ARGV == 1);
+    
+    my $param = shift @ARGV;
+    die "`$param' is a directory\n" if -d $param;
+    die "`$param' is no file\n" unless -f $param;
+    
+    # parse paths and parametes
+    my $realfile = abs_path($param);
+    my $realpath = $realfile;
+    $realpath =~ s,/[^/]+$,,;
+    $gitdir = `cd "$realpath"; git rev-parse --show-toplevel`;
+    chomp $gitdir;
+
+    my $len = length $gitdir;
+    die "messy paths, ouch! `$gitdir' vs. `$realfile'"
+	unless substr($realfile, 0, $len) eq $gitdir;
+	
+    $file = substr $realfile, $len;
+    $file =~ s,^/,,;
+	
+}
+print "git repo   = `$gitdir'\n";
+print "file       = `$file'\n";
+print "output dir = `$output'\n";
+
 
 # prepare output dir
 remove_tree($output);
