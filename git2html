@@ -203,7 +203,7 @@ sub parse_commandline(@)
 	    } elsif ($arg eq '-c') {
 		$charset = $param;
 
-	    } elsif ($arg eq 't') {
+	    } elsif ($arg eq '-t') {
 		$tabwidth = $param;
 		$param =~ tr/0-9//d;
 		die "tabwidth is no integer" unless $param eq '';
