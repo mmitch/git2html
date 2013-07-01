@@ -10,7 +10,7 @@ Current status is "works for me", git2html is propably not the right tool to tra
 
 ## Invocation
 
-    git2html [-h|--help]
+    git2html [-h|--help] [-x]
              [-o <output directory>] [-c <charset>] [-t <tabwidth>]
              [ [-i <branch>] ... ]
              <sourcefile>
@@ -28,6 +28,10 @@ The `tabwidth` will be used to expand tabs in the source file.  Default is `8`.
 
 `-i <branch>` ignores the given branch in the output.  This parameter
 can be used multiple times to suppress multiple branches.
+
+`-x` will use an external CSS file instead of inlining the CSS in every file.
+
+`-h`, `--help` or no parameters at all will show a short help text.
 
 ## Example
 

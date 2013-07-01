@@ -11,6 +11,7 @@ my $output   = './out';
 my $charset  = 'utf-8';
 my $tabwidth = 8;
 my %branch_ignore;
+my $css_external = 0;
 
 # enable autoflush
 $|++;
@@ -157,9 +158,8 @@ sub print_help($)
 
     print <<"EOF";
 
-git2html [-h|--help]
-         [-o <outdir>] [-c <charset>] [-t <tabwidth>]
-         [ [-i <branch>] ... ]
+git2html [-h|--help] [-x]
+         [-o <outdir>] [-c <charset>] [-t <tabwidth>] [ [-i <branch>] ... ]
          <sourcefile>
 
  <sourcefile>    the file to convert, must be inside a non-bare git repository
@@ -172,6 +172,8 @@ git2html [-h|--help]
  -t <tabwidth>   expand tabs to this many spaces, default is `$tabwidth'
 
  -i <branch>     ignore <branch> in output files
+
+ -x              generate an external CSS file instead of inline CSS
 
  -h, --help      show this help
 
@@ -191,27 +193,31 @@ sub parse_commandline(@)
 
 	if ($arg eq '-h' or $arg eq '--help') {
 	    print_help(0);
-
-	} else {
+	}
+	elsif ($arg eq '-x') {
+	    $css_external = 1;
+	}
+	else {
 	    my $param = shift @args;
 	    die "no parameter given for `$arg'\n" unless defined $param;
 	    die "parameter is empty for `$arg'\n" if $param eq '';
 
 	    if ($arg eq '-o') {
 		$output = $param;
-
-	    } elsif ($arg eq '-c') {
+	    }
+	    elsif ($arg eq '-c') {
 		$charset = $param;
 
-	    } elsif ($arg eq '-t') {
+	    }
+	    elsif ($arg eq '-t') {
 		$tabwidth = $param;
 		$param =~ tr/0-9//d;
 		die "tabwidth is no integer" unless $param eq '';
-
-	    } elsif ($arg eq '-i') {
+	    }
+	    elsif ($arg eq '-i') {
 		$branch_ignore{$param}++
-
-	    } else {
+	    }
+	    else {
 		die "unknown switch `$arg'\n";
 
 	    }
@@ -221,7 +227,8 @@ sub parse_commandline(@)
 
     if (@args == 0) {
 	print_help(1);
-    } elsif ($args[0] eq '-h' or $args[0] eq '--help') {
+    }
+    elsif ($args[0] eq '-h' or $args[0] eq '--help') {
 	print_help(0);
     }
     
@@ -232,7 +239,7 @@ sub parse_commandline(@)
     # parse paths and parametes
     my $realfile = abs_path($param);
     my $realpath = $realfile;
-    $realpath =~ s,/[^/]+$,,;
+    $realpath =~ s(/[^/]+$)();
     $gitdir = `cd "$realpath"; git rev-parse --show-toplevel`;
     chomp $gitdir;
 
@@ -241,7 +248,7 @@ sub parse_commandline(@)
 	unless substr($realfile, 0, $len) eq $gitdir;
 	
     $file = substr $realfile, $len;
-    $file =~ s,^/,,;
+    $file =~ s(^/)();
 	
 }
 
@@ -286,7 +293,8 @@ sub format_html_navbar($$)
     $ret .= '<span class="button">';
     if ($id > 0) {
 	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a> ', ($id - 1);
-    } else {
+    }
+    else {
 	$ret .= '&lt;&lt;&lt; ';
     }
     $ret .= '</span>';
@@ -298,7 +306,8 @@ sub format_html_navbar($$)
     $ret .= '<span class="button">';
     if ($id < $max_id - 1) {
 	$ret .= sprintf '<a href="%04d.html">&gt;&gt;&gt;</a> ', ($id + 1);
-    } else {
+    }
+    else {
 	$ret .= '&gt;&gt;&gt; ';
     }
     $ret .= '</span>';
@@ -315,7 +324,12 @@ sub format_html_header()
     my $ret = "<!DOCTYPE html>\n";
     $ret .= '<html><head>';
     $ret .= "<meta charset='$charset'>";
-    $ret .= "<style>\n$css\n</style>";
+    if ($css_external) {
+	$ret .= '<link rel="stylesheet" type="text/css" href="../git2html.css">';
+    }
+    else {
+	$ret .= "<style>\n$css\n</style>";
+    }
     $ret .= '</head><body>';
     return $ret;
 }
@@ -407,28 +421,25 @@ sub diff_single_line($$)
 	    if ($type eq '-') { # left is removed
 		$left_  .= add_span($left,  'red');
 		$right_ .= add_span($right, 'lightblue');
-		
-	    } elsif ($type eq '+') { # right is added
+	    }
+	    elsif ($type eq '+') { # right is added
 		$left_  .= add_span($left , 'lightblue');
 		$right_ .= add_span($right, 'green');
-		
-	    } elsif ($type eq 'u') { # unchanged
+	    }
+	    elsif ($type eq 'u') { # unchanged
 		$left_  .= add_span($left , 'lightblue');
 		$right_ .= add_span($right, 'lightblue');
-			    
-	    } elsif ($type eq 'c') { # both changed
-			    
+	    }
+	    elsif ($type eq 'c') { # both changed
 		die "we can't be here!";
-
-	    } else {
-
+	    }
+	    else {
 		die "we can't be here, neither!";
-
 	    }
 
 	}
-
-    } else {
+    }
+    else {
 
 	# transform type markers to string
 	my $tokens =
@@ -461,7 +472,7 @@ sub diff_single_line($$)
 	# format parts
 	$l1 = add_span($l1, 'lightblue') unless $l1 eq '';
 	$l2 = add_span($l2, 'blue')      unless $l2 eq '';
-	$l3 = add_span($l3, 'lightblue') unless $l3 eq '';
+ 	$l3 = add_span($l3, 'lightblue') unless $l3 eq '';
 
 	$r1 = add_span($r1, 'lightblue') unless $r1 eq '';
 	$r2 = add_span($r2, 'blue')      unless $r2 eq '';
@@ -595,7 +606,7 @@ foreach my $branch (keys %branch) {
 	if ($lastfile) {
 
 	    my $htmlfile = sprintf '%s/%04d.html', $outdir, $id;
-	    open HTML, '>', $htmlfile or die "can't open `$htmlfile': $1";
+	    open HTML, '>', $htmlfile or die "can't open `$htmlfile': $!";
 
 	    print HTML format_html_header();
 
@@ -624,7 +635,8 @@ foreach my $branch (keys %branch) {
 		    push @left,  $left;
 		    push @right, $right;
 
-		} else {
+		}
+		else {
 
 		    $left  = htmlize( $left );
 		    $right = htmlize( $right );
@@ -632,15 +644,14 @@ foreach my $branch (keys %branch) {
 		    if ($type eq '-') { # left is removed
 			push @left,  add_span($left, 'red');
 			push @right, $right;
-			
-		    } elsif ($type eq '+') { # right is added
+		    }
+		    elsif ($type eq '+') { # right is added
 			push @left,  $left;
 			push @right, add_span($right, 'green');
-			
-		    } elsif ($type eq 'u') { # unchanged
+		    }
+		    elsif ($type eq 'u') { # unchanged
 			push @left,  $left;
 			push @right, $right;
-
 		    }
 			
 		}
@@ -660,7 +671,7 @@ foreach my $branch (keys %branch) {
 
 	    print HTML format_html_footer();
 
-	    close HTML or die "can't close `$htmlfile': $1";
+	    close HTML or die "can't close `$htmlfile': $!";
 
 	    $id++;
 	}
@@ -681,10 +692,17 @@ foreach my $branch (keys %branch) {
 
 # write index.html
 
-my $htmlfile = "${output}/index.html";
-open HTML, '>', $htmlfile or die "can't open `$htmlfile': $1";
+print "\nwriting index.html...\n";
 
-print HTML format_html_header();
+my $htmlfile = "${output}/index.html";
+open HTML, '>', $htmlfile or die "can't open `$htmlfile': $!";
+
+{
+    # fix external CSS path if used - a bit clunky, find a better solution
+    my $header = format_html_header();
+    $header =~ s("../)(");
+    print HTML $header;
+}
 
 print HTML "<h1>$file</h1>\n";
 print HTML '<ul>';
@@ -694,9 +712,26 @@ foreach my $branch (sort keys %branch) {
 		 $branch,
 		 @{$branch{$branch}->{COMMITS}} - 1
 	);
+    print "x";
 }
+print "\n";
+
 print HTML '</ul>';
 
 print HTML format_html_footer();
 
-close HTML or die "can't close `$htmlfile': $1";
+close HTML or die "can't close `$htmlfile': $!";
+
+
+# write external stylesheet if desired
+
+if ($css_external) {
+
+    print "\nwriting CSS...\n";
+    my $cssfile = "${output}/git2html.css";
+    open CSS, '>', $cssfile or die "can't open `$cssfile': $!";
+    print CSS $css;
+    close CSS or die "can't close `$cssfile': $!";
+
+    print "x\n";
+}
