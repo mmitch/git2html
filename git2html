@@ -56,7 +56,7 @@ $css .= <<EOF;
     border-color: #ccc;
   margin: 0;
   padding: 0 5px;
-    white-space: no-wrap;
+    white-space: nowrap;
 }
 
 .red {
@@ -318,6 +318,7 @@ sub format_html_header()
 {
     my $ret = "<!DOCTYPE html>\n";
     $ret .= '<html><head>';
+    $ret .= '<title>git2html</title>'; # TODO: better title tag
     $ret .= "<meta charset='$charset'>";
     if ($css_external) {
 	$ret .= '<link rel="stylesheet" type="text/css" href="../git2html.css">';
