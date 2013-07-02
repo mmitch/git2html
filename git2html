@@ -267,6 +267,14 @@ sub git(@)
     return @ret;
 }
 
+# prepend a file with '../'
+sub path_depth($$)
+{
+    my ($file, $dirdepth) = @_;
+
+    return ('../' x $dirdepth) . $file;
+}
+
 # format ASCII to HTML
 sub htmlize(@)
 {
@@ -295,7 +303,7 @@ sub format_html_navbar($$)
     $ret .= '</span>';
 
     $ret .= '<span class="button">';
-    $ret .= '<a href="../index.html">^^^</a> ';
+    $ret .= '<a href="'.path_depth('index.html', 1).'">^^^</a> ';
     $ret .= '</span>';
 
     $ret .= '<span class="button">';
@@ -314,14 +322,16 @@ sub format_html_navbar($$)
 }
 
 # print HTML header
-sub format_html_header()
+sub format_html_header($)
 {
+    my $dirdepth = shift;
+
     my $ret = "<!DOCTYPE html>\n";
     $ret .= '<html><head>';
     $ret .= '<title>git2html</title>'; # TODO: better title tag
     $ret .= "<meta charset='$charset'>";
     if ($css_external) {
-	$ret .= '<link rel="stylesheet" type="text/css" href="../git2html.css">';
+	$ret .= '<link rel="stylesheet" type="text/css" href="'.path_depth('git2html.css', $dirdepth).'">';
     }
     else {
 	$ret .= "<style>\n$css\n</style>";
@@ -604,7 +614,7 @@ foreach my $branch (keys %branch) {
 	    my $htmlfile = sprintf '%s/%04d.html', $outdir, $id;
 	    open HTML, '>', $htmlfile or die "can't open `$htmlfile': $!";
 
-	    print HTML format_html_header();
+	    print HTML format_html_header(1);
 
 	    print HTML format_html_navbar($id, $max_id);
 
@@ -693,12 +703,7 @@ print "\nwriting index.html...\n";
 my $htmlfile = "${output}/index.html";
 open HTML, '>', $htmlfile or die "can't open `$htmlfile': $!";
 
-{
-    # fix external CSS path if used - a bit clunky, find a better solution
-    my $header = format_html_header();
-    $header =~ s("../)(");
-    print HTML $header;
-}
+print HTML format_html_header(0);
 
 print HTML "<h1>$file</h1>\n";
 print HTML '<ul>';
