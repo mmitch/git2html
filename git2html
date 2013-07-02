@@ -13,6 +13,10 @@ my $tabwidth = 8;
 my %branch_ignore;
 my $css_external = 0;
 
+# constants
+my $MAINFILE = 'index.html';
+my $CSSFILE  = 'git2html.css';
+
 # enable autoflush
 $|++;
 
@@ -303,7 +307,7 @@ sub format_html_navbar($$)
     $ret .= '</span>';
 
     $ret .= '<span class="button">';
-    $ret .= '<a href="'.path_depth('index.html', 1).'">^^^</a> ';
+    $ret .= '<a href="'.path_depth($MAINFILE, 1).'">^^^</a> ';
     $ret .= '</span>';
 
     $ret .= '<span class="button">';
@@ -331,7 +335,7 @@ sub format_html_header($)
     $ret .= '<title>git2html</title>'; # TODO: better title tag
     $ret .= "<meta charset='$charset'>";
     if ($css_external) {
-	$ret .= '<link rel="stylesheet" type="text/css" href="'.path_depth('git2html.css', $dirdepth).'">';
+	$ret .= '<link rel="stylesheet" type="text/css" href="'.path_depth($CSSFILE, $dirdepth).'">';
     }
     else {
 	$ret .= "<style>\n$css\n</style>";
@@ -698,9 +702,9 @@ foreach my $branch (keys %branch) {
 
 # write index.html
 
-print "\nwriting index.html...\n";
+print "\nwriting ${MAINFILE}...\n";
 
-my $htmlfile = "${output}/index.html";
+my $htmlfile = "${output}/${MAINFILE}";
 open HTML, '>', $htmlfile or die "can't open `$htmlfile': $!";
 
 print HTML format_html_header(0);
@@ -729,7 +733,7 @@ close HTML or die "can't close `$htmlfile': $!";
 if ($css_external) {
 
     print "\nwriting CSS...\n";
-    my $cssfile = "${output}/git2html.css";
+    my $cssfile = "${output}/${CSSFILE}";
     open CSS, '>', $cssfile or die "can't open `$cssfile': $!";
     print CSS $css;
     close CSS or die "can't close `$cssfile': $!";
