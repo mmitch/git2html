@@ -302,7 +302,7 @@ sub format_html_navbar($)
     my $ret = '<div class="navbar"><span> ';
 
     $ret .= '<span class="button">';
-    if ($id > 0) {
+    if ($id > 1) {
 	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a>', ($id - 1);
     }
     else {
@@ -325,13 +325,13 @@ sub format_html_navbar($)
 
     $ret .= '</span><span style="padding-left:10%">';
 
-    $ret .= sprintf '(%04d/%04d) ', $id+1, $max_id+1;
+    $ret .= sprintf '(%04d/%04d) ', $id, $max_id;
 
     $ret .= '</span><span style="float:right">';
 
     $ret .= '<span class="button">';
-    if ($id > 0) {
-	$ret .= sprintf '<a href="%04d.html">&lt;&lt;</a>', 0;
+    if ($id > 1) {
+	$ret .= sprintf '<a href="%04d.html">&lt;&lt;</a>', 1;
     }
     else {
 	$ret .= '&lt;&lt;';
@@ -370,14 +370,14 @@ sub format_html_header($)
 	$title = "$title : $branch";
     }
     if (defined $id and defined $max_id) {
-	$title = sprintf '%s (%04d/%04d)', $title, $id +1 , $max_id + 1;
+	$title = sprintf '%s (%04d/%04d)', $title, $id, $max_id;
     }
     $ret .= "<title>$title</title>";
 
     $ret .= "<meta charset='$charset'>\n";
 
     if (defined $id) {
-	if ($id > 0) {
+	if ($id > 1) {
 	    my $link = sprintf '%04d.html', ($id - 1);
 	    $ret .= "<link rel='prev' href='$link'>\n";
 	}
@@ -668,8 +668,8 @@ foreach my $branch (keys %branch) {
 
     my $lastcommit = undef;
     my $lastfile;
-    $meta->{'ID'} = 0;
-    $meta->{'MAX_ID'} = @commits - 2;
+    $meta->{'ID'} = 1;
+    $meta->{'MAX_ID'} = @commits - 1;
     $meta->{'DIRDEPTH'} = 1;
     foreach my $commit (@commits) {
 	
@@ -781,7 +781,7 @@ print HTML format_html_header($meta);
 print HTML "<h1>$file</h1>\n";
 print HTML '<ul>';
 foreach my $branch (sort keys %branch) {
-    printf HTML ("<li><a href=\"%s/0000.html\">%s</a> (%04d)</li>\n",
+    printf HTML ("<li><a href=\"%s/0001.html\">%s</a> (%04d)</li>\n",
 		 $branch,
 		 $branch,
 		 @{$branch{$branch}->{COMMITS}} - 1
