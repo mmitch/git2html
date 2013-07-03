@@ -370,7 +370,7 @@ sub format_html_header($)
 	$title = "$title : $branch";
     }
     if (defined $id and defined $max_id) {
-	$title = sprintf '%s : (%04d/%04d)', $title, $id, $max_id;
+	$title = sprintf '%s (%04d/%04d)', $title, $id +1 , $max_id + 1;
     }
     $ret .= "<title>$title</title>";
 
@@ -768,6 +768,7 @@ foreach my $branch (keys %branch) {
 
 print "\nwriting ${MAINFILE}...\n";
 
+$meta->{'BRANCH'} = undef;
 $meta->{'ID'} = undef;
 $meta->{'MAX_ID'} = undef;
 $meta->{'DIRDEPTH'} = 0;
