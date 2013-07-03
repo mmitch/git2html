@@ -299,34 +299,55 @@ sub format_html_navbar($)
 	$_[0]->{'MAX_ID'}
 	);
 
-    my $ret = '<div class="navbar">';
-
+    my $ret = '<div class="navbar"><span> ';
 
     $ret .= '<span class="button">';
     if ($id > 0) {
-	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a> ', ($id - 1);
+	$ret .= sprintf '<a href="%04d.html">&lt;&lt;&lt;</a>', ($id - 1);
     }
     else {
-	$ret .= '&lt;&lt;&lt; ';
+	$ret .= '&lt;&lt;&lt;';
     }
-    $ret .= '</span>';
+    $ret .= '</span> ';
 
     $ret .= '<span class="button">';
-    $ret .= '<a href="'.path_depth($MAINFILE, 1).'">^^^</a> ';
-    $ret .= '</span>';
+    $ret .= '<a href="'.path_depth($MAINFILE, 1).'">^^^</a>';
+    $ret .= '</span> ';
 
     $ret .= '<span class="button">';
     if ($id < $max_id) {
-	$ret .= sprintf '<a href="%04d.html">&gt;&gt;&gt;</a> ', ($id + 1);
+	$ret .= sprintf '<a href="%04d.html">&gt;&gt;&gt;</a>', ($id + 1);
     }
     else {
-	$ret .= '&gt;&gt;&gt; ';
+	$ret .= '&gt;&gt;&gt;';
     }
-    $ret .= '</span>';
+    $ret .= '</span> ';
 
-    $ret .= sprintf '(%04d/%04d)', $id+1, $max_id+1;
+    $ret .= '</span><span style="padding-left:10%">';
 
-    $ret .= '</div>';
+    $ret .= sprintf '(%04d/%04d) ', $id+1, $max_id+1;
+
+    $ret .= '</span><span style="float:right">';
+
+    $ret .= '<span class="button">';
+    if ($id > 0) {
+	$ret .= sprintf '<a href="%04d.html">&lt;&lt;</a>', 0;
+    }
+    else {
+	$ret .= '&lt;&lt;';
+    }
+    $ret .= '</span> ';
+
+    $ret .= '<span class="button">';
+    if ($id < $max_id) {
+	$ret .= sprintf '<a href="%04d.html">&gt;&gt;</a>', $max_id;
+    }
+    else {
+	$ret .= '&gt;&gt;';
+    }
+    $ret .= '</span> ';
+
+    $ret .= '</span></div>';
     return $ret;
 }
 
