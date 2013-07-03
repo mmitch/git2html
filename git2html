@@ -292,10 +292,15 @@ sub htmlize(@)
 }
 
 # print HTML navbar
-sub format_html_navbar($$)
+sub format_html_navbar($)
 {
-    my ($id, $max_id) = (@_);
+    my ($id, $max_id) = (
+	$_[0]->{'ID'},
+	$_[0]->{'MAX_ID'}
+	);
+
     my $ret = '<div class="navbar">';
+
 
     $ret .= '<span class="button">';
     if ($id > 0) {
@@ -311,7 +316,7 @@ sub format_html_navbar($$)
     $ret .= '</span>';
 
     $ret .= '<span class="button">';
-    if ($id < $max_id - 1) {
+    if ($id < $max_id) {
 	$ret .= sprintf '<a href="%04d.html">&gt;&gt;&gt;</a> ', ($id + 1);
     }
     else {
@@ -319,7 +324,7 @@ sub format_html_navbar($$)
     }
     $ret .= '</span>';
 
-    $ret .= sprintf '(%04d/%04d)', $id+1, $max_id;
+    $ret .= sprintf '(%04d/%04d)', $id+1, $max_id+1;
 
     $ret .= '</div>';
     return $ret;
@@ -328,24 +333,53 @@ sub format_html_navbar($$)
 # print HTML header
 sub format_html_header($)
 {
-    my $dirdepth = shift;
+    my ($dirdepth, $id, $max_id, $title, $branch) = (
+	$_[0]->{'DIRDEPTH'}, 
+	$_[0]->{'ID'},
+	$_[0]->{'MAX_ID'},
+	$_[0]->{'FILENAME'},
+	$_[0]->{'BRANCH'}
+	);
+
 
     my $ret = "<!DOCTYPE html>\n";
     $ret .= '<html><head>';
-    $ret .= '<title>git2html</title>'; # TODO: better title tag
-    $ret .= "<meta charset='$charset'>";
+
+    if (defined $branch) {
+	$title = "$title : $branch";
+    }
+    if (defined $id and defined $max_id) {
+	$title = sprintf '%s : (%04d/%04d)', $title, $id, $max_id;
+    }
+    $ret .= "<title>$title</title>";
+
+    $ret .= "<meta charset='$charset'>\n";
+
+    if (defined $id) {
+	if ($id > 0) {
+	    my $link = sprintf '%04d.html', ($id - 1);
+	    $ret .= "<link rel='prev' href='$link'>\n";
+	}
+	if (defined $max_id and $id < $max_id) {
+	    my $link = sprintf '%04d.html', ($id + 1);
+	    $ret .= "<link rel='next' href='$link'>\n";
+	}
+    }
+
     if ($css_external) {
 	$ret .= '<link rel="stylesheet" type="text/css" href="'.path_depth($CSSFILE, $dirdepth).'">';
     }
     else {
 	$ret .= "<style>\n$css\n</style>";
     }
+
     $ret .= '</head><body>';
+
     return $ret;
 }
 
 # print HTML header
-sub format_html_footer()
+sub format_html_footer($)
 {
     my $ret .= '<div class="footer">created by <a href="https://github.com/mmitch/git2html/">git2html</a> on ';
     $ret .= localtime;
@@ -581,10 +615,19 @@ printf "\npruning branches...\n";
 }
 printf "%s\n", 'x' x scalar keys %branch;
 
+
+# prepare meta information hash
+my $barefile = $file;
+$barefile =~ s|^.*/||;
+my $meta = {
+    'FILENAME' => $barefile
+};
     
 # process all branches
 foreach my $branch (keys %branch) {
     print "\nprocessing branch <$branch>...\n";
+
+    $meta->{BRANCH} = $branch;
 
     my @commits = @{$branch{$branch}->{COMMITS}};
 
@@ -603,9 +646,10 @@ foreach my $branch (keys %branch) {
     # create individual diffs
 
     my $lastcommit = undef;
-    my $id = 0;
     my $lastfile;
-    my $max_id = @commits - 1;
+    $meta->{'ID'} = 0;
+    $meta->{'MAX_ID'} = @commits - 2;
+    $meta->{'DIRDEPTH'} = 1;
     foreach my $commit (@commits) {
 	
 	open FILE, '<', "$outdir/$commit" or die "can't open `$outdir/$commit': $!";
@@ -615,12 +659,12 @@ foreach my $branch (keys %branch) {
 
 	if ($lastfile) {
 
-	    my $htmlfile = sprintf '%s/%04d.html', $outdir, $id;
+	    my $htmlfile = sprintf '%s/%04d.html', $outdir, $meta->{'ID'};
 	    open HTML, '>', $htmlfile or die "can't open `$htmlfile': $!";
 
-	    print HTML format_html_header(1);
+	    print HTML format_html_header($meta);
 
-	    print HTML format_html_navbar($id, $max_id);
+	    print HTML format_html_navbar($meta);
 
 	    # print log
 	    
@@ -677,13 +721,13 @@ foreach my $branch (keys %branch) {
 	    }
 	    print HTML '</code></td></tr></table>';
 
-	    print HTML format_html_navbar($id, $max_id);
+	    print HTML format_html_navbar($meta);
 
-	    print HTML format_html_footer();
+	    print HTML format_html_footer($meta);
 
 	    close HTML or die "can't close `$htmlfile': $!";
 
-	    $id++;
+	    $meta->{'ID'}++;
 	}
 	$lastfile = $curfile;
 
@@ -699,15 +743,18 @@ foreach my $branch (keys %branch) {
 
 }
 
-
 # write index.html
 
 print "\nwriting ${MAINFILE}...\n";
 
+$meta->{'ID'} = undef;
+$meta->{'MAX_ID'} = undef;
+$meta->{'DIRDEPTH'} = 0;
+
 my $htmlfile = "${output}/${MAINFILE}";
 open HTML, '>', $htmlfile or die "can't open `$htmlfile': $!";
 
-print HTML format_html_header(0);
+print HTML format_html_header($meta);
 
 print HTML "<h1>$file</h1>\n";
 print HTML '<ul>';
@@ -723,7 +770,7 @@ print "\n";
 
 print HTML '</ul>';
 
-print HTML format_html_footer();
+print HTML format_html_footer($meta);
 
 close HTML or die "can't close `$htmlfile': $!";
 
