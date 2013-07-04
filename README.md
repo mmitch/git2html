@@ -1,8 +1,10 @@
 git2html
 ========
 
- git2html - render a single file's changelog from git to static HTML files
- Copyright (C) 2013  Christian Garbs <mitch@cgarbs.de>
+## Copyright
+
+git2html - render a single file's changelog from git to static HTML files  
+Copyright (C) 2013  Christian Garbs <mitch@cgarbs.de>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
