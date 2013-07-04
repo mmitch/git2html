@@ -1,12 +1,28 @@
 git2html
 ========
 
+ git2html - render a single file's changelog from git to static HTML files
+ Copyright (C) 2013  Christian Garbs <mitch@cgarbs.de>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## About
 
 `git2html` is used to render a single file's changelog from git to static HTML files.
-I wrote it to do some code review on small Perl scripts.
-Current status is "works for me", git2html is propably not the right tool to track changes within 2000+ lines of code :)
+I wrote it to do some code reviews on small Perl scripts.
+Current status is "works for me".
+`git2html` is propably not the right tool to track changes within 2000+ lines of code :)
 
 ## Invocation
 
@@ -52,3 +68,9 @@ The following executables are needed:
 
 * `git` (obviously)
 * `expand` from coreutils
+
+## Links
+
+* [git2html](https://github.com/mmitch/git2html-test/)
+* [git2html live demo](http://www.cgarbs.de/stuff/git2html-test/)
+* [git2html demo source](https://github.com/mmitch/git2html-test/)

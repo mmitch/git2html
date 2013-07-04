@@ -1,4 +1,23 @@
 #!/usr/bin/perl -w
+#
+# git2html - render a single file's changelog from git to static HTML files
+# Copyright (C) 2013  Christian Garbs <mitch@cgarbs.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#####################################################################################
+
 use strict;
 use File::Path qw(make_path remove_tree);
 use Algorithm::Diff qw(sdiff);
@@ -157,24 +176,21 @@ sub print_help($)
 
     print <<"EOF";
 
-git2html [-h|--help] [-x]
-         [-o <outdir>] [-c <charset>] [-t <tabwidth>] [ [-i <branch>] ... ]
-         <sourcefile>
+git2html - render a single file\'s changelog from git to static HTML files
+Copyright (C) 2013  Christian Garbs <mitch\@cgarbs.de>
+licensed under GNU GPL v3 or later
 
- <sourcefile>    the file to convert, must be inside a non-bare git repository
+usage:  git2html [-h|--help] [-x] [-o <outdir>] [-c <charset>] [-t <tabwidth>]
+                 [ [-i <branch>] ... ] <sourcefile>
 
- -o <outdir>     output directory, default is `$output'
-                 DIRECTORY WILL BE SILENTLY OVERWRITTEN, BE CAREFUL!
-
- -c <charset>    HTML charset meta header, default is `$charset'
-
- -t <tabwidth>   expand tabs to this many spaces, default is `$tabwidth'
-
- -i <branch>     ignore <branch> in output files
-
- -x              generate an external CSS file instead of inline CSS
-
- -h, --help      show this help
+ <sourcefile>   the file to convert, must be inside a non-bare git repository
+ -o <outdir>    output directory, default is \`$output\'
+                >> OUTPUT DIRECTORY WILL BE SILENTLY OVERWRITTEN, LOOK OUT! <<
+ -c <charset>   HTML charset meta header, default is \`$charset\'
+ -t <tabwidth>  expand tabs to this many spaces, default is \`$tabwidth\'
+ -i <branch>    ignore <branch> in output files
+ -x             generate an external CSS file instead of inline CSS
+ -h, --help     show this help
 
 EOF
 ;
