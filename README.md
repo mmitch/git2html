@@ -1,6 +1,13 @@
 git2html
 ========
 
+## About
+
+`git2html` is used to render a single file's changelog from git to static HTML files.
+I wrote it to do some code reviews on small Perl scripts.
+Current status is "works for me".
+`git2html` is propably not the right tool to track changes within 2000+ lines of code :)
+
 ## Copyright
 
 git2html - render a single file's changelog from git to static HTML files  
@@ -18,13 +25,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-## About
-
-`git2html` is used to render a single file's changelog from git to static HTML files.
-I wrote it to do some code reviews on small Perl scripts.
-Current status is "works for me".
-`git2html` is propably not the right tool to track changes within 2000+ lines of code :)
 
 ## Invocation
 
