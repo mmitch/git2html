@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="git2html : render a single file's changelog from git to static HTML files" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>git2html</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/mmitch/git2html">View on GitHub</a>
+
+          <h1 id="project_title">git2html</h1>
+          <h2 id="project_tagline">render a single file's changelog from git to static HTML files</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/mmitch/git2html/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/mmitch/git2html/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="git2html" class="anchor" href="#git2html"><span class="octicon octicon-link"></span></a>git2html</h1>
+
+<h2>
+<a name="copyright" class="anchor" href="#copyright"><span class="octicon octicon-link"></span></a>Copyright</h2>
+
+<p>git2html - render a single file's changelog from git to static HTML files<br>
+Copyright (C) 2013  Christian Garbs <a href="mailto:mitch@cgarbs.de">mitch@cgarbs.de</a></p>
+
+<p>This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.</p>
+
+<p>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.</p>
+
+<p>You should have received a copy of the GNU General Public License
+along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
+
+<h2>
+<a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h2>
+
+<p><code>git2html</code> is used to render a single file's changelog from git to static HTML files.
+I wrote it to do some code reviews on small Perl scripts.
+Current status is "works for me".
+<code>git2html</code> is propably not the right tool to track changes within 2000+ lines of code :)</p>
+
+<h2>
+<a name="invocation" class="anchor" href="#invocation"><span class="octicon octicon-link"></span></a>Invocation</h2>
+
+<pre><code>git2html [-h|--help] [-x]
+         [-o &lt;output directory&gt;] [-c &lt;charset&gt;] [-t &lt;tabwidth&gt;]
+         [ [-i &lt;branch&gt;] ... ]
+         &lt;sourcefile&gt;
+</code></pre>
+
+<p><code>&lt;sourcefile&gt;</code> must be part of a non-bare local git repository.
+This file's changelog will be converted to HTML over all available branches.</p>
+
+<p>The generated files will be created in the <code>output directory</code> (<code>./out</code>
+by default) relative to your current working directory.
+<strong>BEWARE:</strong> This directory and all it's contents will be silently overwritten!</p>
+
+<p>The <code>charset</code> will be used in the HTML charset meta header.  Default is <code>utf-8</code>.</p>
+
+<p>The <code>tabwidth</code> will be used to expand tabs in the source file.  Default is <code>8</code>.</p>
+
+<p><code>-i &lt;branch&gt;</code> ignores the given branch in the output.  This parameter
+can be used multiple times to suppress multiple branches.</p>
+
+<p><code>-x</code> will use an external CSS file instead of inlining the CSS in every file.</p>
+
+<p><code>-h</code>, <code>--help</code> or no parameters at all will show a short help text.</p>
+
+<h2>
+<a name="example" class="anchor" href="#example"><span class="octicon octicon-link"></span></a>Example</h2>
+
+<p>This <a href="http://www.cgarbs.de/stuff/git2html-test/">live demo</a> is generated nightly from the
+<a href="https://github.com/mmitch/git2html-test/">git2html-test</a> demo repository
+using the most current version of <code>git2html</code>.</p>
+
+<h2>
+<a name="prerequisites" class="anchor" href="#prerequisites"><span class="octicon octicon-link"></span></a>Prerequisites</h2>
+
+<p>The following Perl modules are needed:</p>
+
+<ul>
+<li><code>Algorithm::Diff</code></li>
+<li>
+<code>Cwd</code> (should be part of Perl base install)</li>
+<li>
+<code>File::Path</code> (should be part of Perl base install)</li>
+<li><code>HTML::Entities</code></li>
+</ul><p>The following executables are needed:</p>
+
+<ul>
+<li>
+<code>git</code> (obviously)</li>
+<li>
+<code>expand</code> from coreutils</li>
+</ul><h2>
+<a name="links" class="anchor" href="#links"><span class="octicon octicon-link"></span></a>Links</h2>
+
+<ul>
+<li><a href="https://github.com/mmitch/git2html-test/">git2html</a></li>
+<li><a href="http://www.cgarbs.de/stuff/git2html-test/">git2html live demo</a></li>
+<li><a href="https://github.com/mmitch/git2html-test/">git2html demo source</a></li>
+</ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">git2html maintained by <a href="https://github.com/mmitch">mmitch</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
